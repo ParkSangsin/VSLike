@@ -3,18 +3,22 @@ using UnityEngine;
 public class Enemy : MonoBehaviour
 {
     public float speed;
+    public float health; // 현재 체력
+    public float maxHealth; // 최대 체력
+    public RuntimeAnimatorController[] animCon;
     public Rigidbody2D target;
 
-    bool isLive = true;
+    bool isLive;
 
     Rigidbody2D rigid;
-
+    Animator anim;
     SpriteRenderer spriter;
 
     private void Awake()
     {
         rigid = GetComponent<Rigidbody2D>();
         spriter = GetComponent<SpriteRenderer>();
+        anim = GetComponent<Animator>();
     }
 
     private void FixedUpdate()
@@ -37,5 +41,17 @@ public class Enemy : MonoBehaviour
     {
         // 아직 존재하지 않아 설정하지 못한 target을 초기화 (없기 때문에 드래그로는 불가)
         target = GameManager.Instance.player.GetComponent<Rigidbody2D>();
+        isLive = true;
+        health = maxHealth;
+    }
+
+    // 적 상태 초기화 함수
+    public void Init(SpawnData data)
+    {
+        // 현재 객체의 애니메이션 설정
+        anim.runtimeAnimatorController = animCon[data.spriteType];
+        speed = data.speed;
+        maxHealth = data.health;
+        health = data.health;
     }
 }

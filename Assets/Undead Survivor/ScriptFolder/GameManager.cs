@@ -12,6 +12,8 @@ public class GameManager : MonoBehaviour
     public float maxGameTime = 2 * 10f; // 한 스테이지의 게임 최대 시간
 
     [Header("# Plater Info")]
+    public int health;
+    public int maxHealth = 100;
     public int level; // 스테이지 단계
     public int kill; // 킬 수
     public int exp; // 경험치
@@ -26,6 +28,11 @@ public class GameManager : MonoBehaviour
     private void Awake()
     {
         Instance = this; // 자기 자신
+    }
+
+    private void Start()
+    {
+        health = maxHealth;
     }
 
     void Update()

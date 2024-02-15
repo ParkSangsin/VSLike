@@ -7,8 +7,16 @@ public class Weapon : MonoBehaviour
     public int id; // 무기 id
     public int prefabId; // 프리펩 번호
     public float damage; // 데미지
-    public int count; // 무기 개수
-    public float speed; // 회전 속도
+    public int count; // 무기 개수 or 관통력
+    public float speed; // 회전 속도 or 발사 속도
+
+    float timer; // 발사 간격
+    Player player;
+
+    private void Awake()
+    {
+        player = GetComponentInParent<Player>(); // 부모 오브젝트에 있는 컴포넌트
+    }
 
     private void Start()
     {
@@ -25,13 +33,19 @@ public class Weapon : MonoBehaviour
                 transform.Rotate(Vector3.back * speed * Time.deltaTime); // 시계방향으로 회전
                 break;
             default:
+                timer += Time.deltaTime;
+                if (timer > speed) // speed초마다 발사 (적을 수록 많이 발사)
+                {
+                    timer = 0;
+                    Fire();
+                }
                 break;
         }
 
         // Level Up Test
         if (Input.GetButtonDown("Jump"))
         {
-            LevelUp(20, 2);
+            LevelUp(10, 1);
         }
     }
 
@@ -54,6 +68,7 @@ public class Weapon : MonoBehaviour
                 Batch(); // 무기 배치
                 break;
             default:
+                speed = 0.3f;
                 break;
         }
     }
@@ -84,7 +99,23 @@ public class Weapon : MonoBehaviour
             // Translate는 기본적으로 로컬좌표계에서 이동, 따라서 로컬좌표계에서 본 벡터(up)를 월드좌표계에서 이동
             bullet.Translate(bullet.up * 1.5f, Space.World);
             Debug.Log(bullet.up);
-            bullet.GetComponent<Bullet>().Init(damage, -1); // 근접무기는 관통 수치 -1 (무한)
+            bullet.GetComponent<Bullet>().Init(damage, -1, Vector3.zero); // 근접무기는 관통 수치 -1 (무한)
         }
     }
+
+    void Fire()
+    {
+        if (!player.scanner.nearestTarget) return; // 스캐너에 캐스팅된 대상이 없다면 사격 X
+
+        Vector3 targetPos = player.scanner.nearestTarget.position; // 타겟 위치
+
+        Vector3 dir = targetPos - transform.position; // 타겟을 향한 방향 벡터
+        dir = dir.normalized; // 크기를 0으로 정규화
+
+        Transform bullet = GameManager.Instance.pool.Get(prefabId).transform; // 프리펩이 저장된 pool에서 가져옴
+        bullet.position = transform.position;
+        bullet.rotation = Quaternion.FromToRotation(Vector3.up, dir); // 지정된 축(인자)을 기준으로 벡터(인자)를 향해 회전
+        bullet.GetComponent<Bullet>().Init(damage, count, dir);
+    }
+
 }
